@@ -1,6 +1,13 @@
-# vaadin-builder
-A groovy builder for easier programmatic construction of Vaadin Web UIs, following Groovy's builder syntax.
+## State Machine
+A groovy implementation for a simple state machine with these features:
+* States and Events are represented by Enums
+* Activities and Guards are implemented as Closures
+* Transitions can have Guards and Activities
+  * they are defined with fromState, targetState, triggerEvent, \[Activity] and \[Guard]
+  * if Activity returns a State, the default targetState is overwritten, thus allowing branching Transitions 
+* States can have Activities onEntry, onExit and onEvent
+  * onEvent Activities can also have Guards
 
-A detailled description is in my 
-[Vaadin Builder Tutorial](https://www.georgbeier.de/tutorials-java-und-mehr/java8-spring-groovy-vaadin/vaadin-als-ui-framework/groovy-vaadin-builder/)
- (written in German).
+### Usage
+These simple State Machines were found very useful for controlling user interface behaviour.
+
