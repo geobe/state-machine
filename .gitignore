@@ -1,8 +1,5 @@
-/vaadin-builder.iml
 /build
 /out
-vaadin-builder.iws
-vaadin-builder.ipr
 .gradle
 .idea/
 gradle/
