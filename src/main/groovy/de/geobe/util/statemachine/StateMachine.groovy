@@ -23,9 +23,6 @@
  */
 
 package de.geobe.util.statemachine
-
-import groovy.util.logging.Slf4j
-
 /**
  * Implementation of a state machine with these features
  * <ul><li>States as enums,</li>
@@ -41,7 +38,7 @@ import groovy.util.logging.Slf4j
  * @param S enumertion Type for States. Limited by current implementation to 4095 values.
  * @param E enumeration type for events
  */
-@Slf4j
+//@Slf4j
 class StateMachine<S extends Enum, E extends Enum> {
     /** map for internal actions, indexed by combination of currentState and event */
     private Map<Integer, Closure> stateMachine = new HashMap<>()
@@ -174,14 +171,14 @@ class StateMachine<S extends Enum, E extends Enum> {
                 }
                 currentState = next
                 onEntry[next]?.call()
-//                log.debug("Transition $smid: $currentState--$event->$next")
+//                log.debug("Transition $smid: $fromState--$event->$next")
             } else {
                 // inner transition
                 tx?.action?.call(params)
 //                log.debug("Inner Transition $smid: $fromState--$event->$currentState")
             }
         } else {
-            log.warn("ignored event $event in fromState $currentState")
+//            log.warn("ignored event $event in fromState $currentState")
         }
         currentState
     }

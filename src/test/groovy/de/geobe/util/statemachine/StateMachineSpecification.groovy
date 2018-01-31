@@ -24,14 +24,11 @@
 
 package de.geobe.util.statemachine
 
-import groovy.util.logging.Slf4j
 import spock.lang.Specification
-
 
 /**
  * Created by georg beier on 22.01.2018.
  */
-@Slf4j
 class StateMachineSpecification extends Specification {
 
     static enum State {
@@ -86,7 +83,7 @@ class StateMachineSpecification extends Specification {
     }
 
     def cleanup() {
-        log.info("\n${sbuf.toString()}")
+        println("\n${sbuf.toString()}")
     }
 
     def 'do nothing but initialize tests'() {
