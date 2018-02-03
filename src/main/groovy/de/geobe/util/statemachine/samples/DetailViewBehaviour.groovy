@@ -50,27 +50,27 @@ import de.geobe.util.statemachine.StateMachine
  *             <init>                <init>
  *               |                     |
  *           +---v---+           +-----v-----+
- *           | INIT  |---root--->|   EMPTY   |<-------------+
- *           +-v-----+           +|-^-v--^-v-+              |
- *             |                  | | |  | |                |
- *             |  +-----select----+ | |  | +-dialog--+   cancel
- *        select  |  +------root----+ |  |           |      |
- *             |  |  |                |  |        +--v------^---+
- *     +----+  |  |  |    +-----------|--|--save-<| DIALOGEMPTY |
- *    select|  |  |  |    |      create cancel    +-------------+
- *     |  +-v--v--v--^--+ |     +-----v--^----+
- *     +-<|    SHOW     |<+save-| CREATEEMPTY |
- *        +v--^--^--v--v+       +-------------+
- *         |  |  |  |  +---------------------+
- *         |  |  +--|-------------+----------|-----+
- *         |  +--|--|----------+--|----------|--+  |
- *         |  |  |  +-------+  |  |          |  |  |
- *         |  | cancel      |  | cancel      |  | cancel
- *    create  |  |       edit  |  |     dialog  |  |
- *         |save |          |save |          |save |
- *       +-v--^--^-+      +-v--^--^-+      +-v--^--^--+
- *       | CREATE  |      |  EDIT   |      |  DIALOG  |
- *       +---------+      +---------+      +----------+
+ *           | INIT  |---root--->|   EMPTY   |
+ *           +-v-----+           +|-^-v--^---+
+ *             |                  | | |  |
+ *             |  +-----select----+ | |  |
+ *        select  |  +------root----+ |  |
+ *             |  |  |                |  |
+ *     +----+  |  |  |           create cancel
+ *    select|  |  |  |                |  |
+ *     |  +-v--v--v--^--+       +-----v--^----+
+ *     +-<|    SHOW     |<-save-| CREATEEMPTY |
+ *        +v--^--^--v---+       +-------------+
+ *         |  |  |  |
+ *         |  |  +--|-------------+
+ *         |  +--|--|----------+  |
+ *         |  |  |  +-------+  |  |
+ *         |  | cancel      |  | cancel
+ *    create  |  |       edit  |  |
+ *         |save |          |save |
+ *       +-v--^--^-+      +-v--^--^-+
+ *       | CREATE  |      |  EDIT   |
+ *       +---------+      +---------+
  *
  * </pre>
  * @author georg beier
@@ -92,8 +92,6 @@ abstract class DetailViewBehavior {
         sm.addEntryAction(DVState.CREATEEMPTY, { createemptymode() })
         sm.addEntryAction(DVState.CREATE, { clearFields(); createmode() })
         sm.addEntryAction(DVState.EDIT, { editmode() })
-        sm.addEntryAction(DVState.DIALOG, { dialogmode() })
-        sm.addEntryAction(DVState.DIALOGEMPTY, { dialogemptymode() })
 
         sm.addTransition(DVState.SUBVIEW, DVState.INIT, DVEvent.Init)
         sm.addTransition(DVState.INIT, DVState.SHOW, DVEvent.Select)
@@ -103,12 +101,10 @@ abstract class DetailViewBehavior {
         sm.addTransition(DVState.EMPTY, DVState.CREATEEMPTY, DVEvent.Create)
         sm.addTransition(DVState.EMPTY, DVState.SHOW, DVEvent.Select)
         sm.addTransition(DVState.CREATEEMPTY, DVState.SHOW, DVEvent.Save) {
-            saveItem()
-            setFieldValues()
-            onEditDone(true)
+            onCreateSave()
         }
         sm.addTransition(DVState.CREATEEMPTY, DVState.EMPTY, DVEvent.Cancel) {
-            onEditDone()
+            onCreateCancel()
         }
         sm.addTransition(DVState.SHOW, DVState.EDIT, DVEvent.Edit)
         sm.addTransition(DVState.SHOW, DVState.CREATE, DVEvent.Create)
@@ -123,26 +119,10 @@ abstract class DetailViewBehavior {
             onEditDone()
         }
         sm.addTransition(DVState.CREATE, DVState.SHOW, DVEvent.Save) {
-            saveItem()
-            onEditDone(true)
+            onCreateSave()
         }
         sm.addTransition(DVState.CREATE, DVState.SHOW, DVEvent.Cancel) {
-            setFieldValues()
-            onEditDone()
-        }
-        sm.addTransition(DVState.EMPTY, DVState.DIALOGEMPTY, DVEvent.Dialog)
-        sm.addTransition(DVState.DIALOGEMPTY, DVState.SHOW, DVEvent.Save) {
-            saveDialog()
-        }
-        sm.addTransition(DVState.DIALOGEMPTY, DVState.EMPTY, DVEvent.Cancel) {
-            cancelDialog()
-        }
-        sm.addTransition(DVState.SHOW, DVState.DIALOG, DVEvent.Dialog)
-        sm.addTransition(DVState.DIALOG, DVState.SHOW, DVEvent.Save) {
-            saveDialog()
-        }
-        sm.addTransition(DVState.DIALOG, DVState.SHOW, DVEvent.Cancel) {
-            cancelDialog()
+            onCreateCancel()
         }
     }
 
@@ -151,17 +131,13 @@ abstract class DetailViewBehavior {
     }
 
     /** prepare for editing in CREATEEMPTY state */
-    protected void createemptymode() { editmode() }
+    protected abstract void createemptymode()
     /** prepare for editing in CREATE state */
-    protected void createmode() { editmode() }
-    /** prepare for working in DIALOG state */
-    protected void dialogmode() {}
-    /** prepare for working in DIALOGEMPTY state */
-    protected void dialogemptymode() {}
-    /** leaving DIALOG state with save */
-    protected void saveDialog() {}
+    protected abstract void createmode()
+    /** leaving CREATE or CREATEEMPTY state with save */
+    protected void onCreateSave() {}
     /** leaving DIALOG state with cancel */
-    protected void cancelDialog() {}
+    protected void onCreateCancel() {}
     /** prepare for editing in EDIT state */
     protected abstract void editmode()
     /** prepare INIT state */
@@ -216,10 +192,8 @@ enum DVState {
     EMPTY,          // no object is selected for this view, but a root node is selected
     SHOW,           // an object is selected and shown on the tab
     CREATEEMPTY,    // starting from EMPTY (important for Cancel events!), a new Object is created
-    DIALOGEMPTY,    // starting from EMPTY (important for Cancel events!), we are in a modal (create) dialog
     CREATE,         // starting from SHOW (important for Cancel events!), a new Object is created
     EDIT,           // selected object is being edited
-    DIALOG,         // we are in a modal (create) dialog
 }
 
 enum DVEvent {
@@ -230,5 +204,4 @@ enum DVEvent {
     Create,   // start creating a new object
     Cancel,   // cancel edit or create
     Save,     // save newly edited or created object
-    Dialog,   // enter a modal dialog
 }
