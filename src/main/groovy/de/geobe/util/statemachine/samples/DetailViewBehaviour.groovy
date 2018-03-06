@@ -47,13 +47,13 @@ import de.geobe.util.statemachine.StateMachine
  *            SUBVIEW               TOPVIEW
  *               O                     O
  *               |                     |
- *             <init>                <init>
+ *             /init/                /init/
  *               |                     |
  *           +---v---+           +-----v-----+
- *           | INIT  |---root--->|   EMPTY   |
- *           +-v-----+           +|-^-v--^---+
- *             |                  | | |  |
- *             |  +-----select----+ | |  |
+ *           | INIT  |---root--->|   EMPTY   |<-+
+ *           +-v-----+           +|-^-v--^-v-+ root
+ *             |                  | | |  | |    |
+ *             |  +-----select----+ | |  | +----+
  *        select  |  +------root----+ |  |
  *             |  |  |                |  |
  *     +----+  |  |  |           create cancel
@@ -86,6 +86,7 @@ abstract class DetailViewBehavior {
 
         sm = new StateMachine<DVState, DVEvent>(initState)
 
+        // define state activities
         sm.addEntryAction(DVState.INIT, { clearFields(); initmode() })
         sm.addEntryAction(DVState.EMPTY, { emptymode() })
         sm.addEntryAction(DVState.SHOW, { showmode() })
@@ -93,6 +94,7 @@ abstract class DetailViewBehavior {
         sm.addEntryAction(DVState.CREATE, { clearFields(); createmode() })
         sm.addEntryAction(DVState.EDIT, { editmode() })
 
+        // define transition [optionally with activities]
         sm.addTransition(DVState.SUBVIEW, DVState.INIT, DVEvent.Init)
         sm.addTransition(DVState.INIT, DVState.SHOW, DVEvent.Select)
         sm.addTransition(DVState.INIT, DVState.EMPTY, DVEvent.Root)
@@ -111,12 +113,10 @@ abstract class DetailViewBehavior {
         sm.addTransition(DVState.SHOW, DVState.SHOW, DVEvent.Select)
         sm.addTransition(DVState.SHOW, DVState.EMPTY, DVEvent.Root)
         sm.addTransition(DVState.EDIT, DVState.SHOW, DVEvent.Save) {
-            saveItem()
-            onEditDone()
+            saveItem(); onEditDone()
         }
         sm.addTransition(DVState.EDIT, DVState.SHOW, DVEvent.Cancel) {
-            setFieldValues()
-            onEditDone()
+            setFieldValues(); onEditDone()
         }
         sm.addTransition(DVState.CREATE, DVState.SHOW, DVEvent.Save) {
             onCreateSave()
