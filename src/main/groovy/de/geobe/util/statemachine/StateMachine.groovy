@@ -116,7 +116,7 @@ class StateMachine<S extends Enum, E extends Enum> {
     }
 
     /**
-     * Add an onEtry activity to the state machine that is executed each time a transition enters
+     * Add an onEntry activity to the state machine that is executed each time a transition enters
      * the state, even if it comes from the same state.
      * @param state which gets the activiy. Only one entry activity per state is supported
      * @param action Closure that implements the activity. Must not have parameters.
