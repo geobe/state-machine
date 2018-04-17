@@ -40,10 +40,6 @@ package de.geobe.util.statemachine
  */
 //@Slf4j
 class StateMachine<S extends Enum, E extends Enum> {
-    /** map for internal actions, indexed by combination of currentState and event */
-    private Map<Integer, Closure> stateMachine = new HashMap<>()
-    /** map for next states, indexed by combination of currentState and event */
-    private Map<Integer, S> nextState = new HashMap<>()
     /** map of closures as entry actions */
     private Map<S, Closure> onEntry = new HashMap<>()
     /** map of closures as exit actions */
