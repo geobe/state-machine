@@ -32,7 +32,7 @@ package de.geobe.util.statemachine
  * <li>onExit activities executed when leaving a state,</li>
  * <li>internal activities triggered by an event without state change.</li>
  * <li>onEntry activities executed when entering a state,</li>
- * <li>transitions activities executing after leaving a state and before entering a following state.
+ * <li>transitions executing activities after leaving a state and before entering a following state.
  * They can return a target state changing the following state.</li></ul>
  * @author georg beier
  * @param S enumertion Type for States. Limited by current implementation to 4095 values.
