@@ -27,7 +27,8 @@ package de.geobe.util.statemachine.samples
 import de.geobe.util.statemachine.StateMachine
 
 /**
- * <p>A trait for detail views controlled by a selection view like a Tree, TreeTable, List etc. .
+ * <p>An abstract base class for detail views controlled by a selection view like a Tree, TreeTable, List,
+ * a search mask implementation etc. .
  * The behaviour can be controlled efficiently by a state machine for detail views.</p>
  * <p>The structure of the behavior model is implemented by states and transitions. The actual
  * behaviour is realised by actions (-> abstract methods) attached to transitions and entry of states.
@@ -113,10 +114,10 @@ abstract class DetailViewBehavior {
         sm.addTransition(DVState.SHOW, DVState.SHOW, DVEvent.Select)
         sm.addTransition(DVState.SHOW, DVState.EMPTY, DVEvent.Root)
         sm.addTransition(DVState.EDIT, DVState.SHOW, DVEvent.Save) {
-            saveItem(); onEditDone()
+            onEditSave(); onEditDone()
         }
         sm.addTransition(DVState.EDIT, DVState.SHOW, DVEvent.Cancel) {
-            setFieldValues(); onEditDone()
+            onEditCancel(); onEditDone()
         }
         sm.addTransition(DVState.CREATE, DVState.SHOW, DVEvent.Save) {
             onCreateSave()
@@ -129,12 +130,23 @@ abstract class DetailViewBehavior {
     void execute(DVEvent event, Object... params) {
         sm.execute(event, params)
     }
+    /**
+     * Initialize all fields for a new item to display or edit. Given is its id,
+     * so its full dto can be addressed and requested by an appropriate service.
+     * This method is usually called by the selector component.
+     * @param itemId unique identifying key
+     */
+    abstract void initItem(Long itemId)
 
     /** prepare for editing in CREATEEMPTY state */
     protected abstract void createemptymode()
     /** prepare for editing in CREATE state */
     protected abstract void createmode()
-    /** leaving CREATE or CREATEEMPTY state with save */
+    /**
+     * leaving CREATE or CREATEEMPTY state with save
+     * saving created item to persistent storage,
+     * typically by calling an appropriate service.
+     */
     protected void onCreateSave() {}
     /** leaving DIALOG state with cancel */
     protected void onCreateCancel() {}
@@ -148,27 +160,18 @@ abstract class DetailViewBehavior {
     protected abstract void showmode()
     /** clear all editable fields */
     protected abstract void clearFields()
+    /** leaving EDIT state with cancel,
+     * so reset all fields from the current full dto object */
+    protected abstract void onEditCancel()
     /**
-     * Initialize all fields for a new item to display or edit. Given is its id,
-     * so its full dto can be addressed and requested by an appropriate service.
-     * This method is usually called by the selector component.
-     * @param itemId unique identifying key
-     */
-    abstract void initItem(Long itemId)
-    /**
-     * set all fields from the current full dto object
-     */
-    protected abstract void setFieldValues()
-
-    /**
-     * Save current item after editing to persistent storage,
+     * leaving EDIT state with save,
+     * saving current item after editing to persistent storage,
      * typically by calling an appropriate service.
      */
-    protected abstract void saveItem()
-
+    protected abstract void onEditSave()
     /**
-     * When editing an item was finished [Save] or cancelled [Cancel], notify the selector component
-     * to enable it and eventually update the items changed caption
+     * When editing an item was finished [Save] or cancelled [Cancel], notify the selector
+     * component to enable it and eventually update the items changed caption
      * @param itemId identifies edited item
      * @param caption eventually updated caption of the edited item
      * @param mustReload Component must reload after new item was created
@@ -178,30 +181,65 @@ abstract class DetailViewBehavior {
 }
 
 /**
- * It is a choice of implementing classes, if editing existing items or creating new items
- * uses a dialog window (States DIALOG and CREATEDIALOG) or the same fields as for show and edit
- * (States EDIT, CREATE, CREATEEMPTY).<br>
- * States CREATEEMPTY ans DIALOGEMPTY were introduced, because the state model should completely
- * represent the state of the UI. So it can be avoided to have an additional implicit state represented
- * by a field that holds the current item or is empty.
+ * <p>Defined states for DetailView state chart.</p>
+ * <p>It is a choice of implementing classes, if editing existing items or creating new items
+ * uses a dialog window (States DIALOG and CREATEDIALOG) or the same fields
+ * as for show and edit (States EDIT, CREATE, CREATEEMPTY).<br>
+ * States CREATEEMPTY ans DIALOGEMPTY were introduced, because the state model should
+ * completely represent the state of the UI. So it can be avoided to have an additional
+ * implicit state represented by a field that holds the current item or is empty.</p>
+ * <p>To allow extensions to the state chart, three "spare" states ST1, ST2, ST3
+ * are introduced. These states are not used by the default implementation.</p>
  */
 enum DVState {
-    SUBVIEW,        // creation state for detail views of sublevel objects
-    TOPVIEW,        // creation state for detail views of toplevel objects
-    INIT,           // nothing is selected in the controlling tree
-    EMPTY,          // no object is selected for this view, but a root node is selected
-    SHOW,           // an object is selected and shown on the tab
-    CREATEEMPTY,    // starting from EMPTY (important for Cancel events!), a new Object is created
-    CREATE,         // starting from SHOW (important for Cancel events!), a new Object is created
-    EDIT,           // selected object is being edited
+    /** creation state for detail views of sublevel objects*/
+    SUBVIEW,
+    /** creation state for detail views of toplevel objects*/
+    TOPVIEW,
+    /** nothing is selected in the controlling tree*/
+    INIT,
+    /** no object is selected for this view, but a root node is selected*/
+    EMPTY,
+    /** an object is selected and shown on the tab*/
+    SHOW,
+    /** starting from EMPTY (important for Cancel events!), create a new Object*/
+    CREATEEMPTY,
+    /** starting from SHOW (important for Cancel events!), create a new Object*/
+    CREATE,
+    /** selected object is being edited*/
+    EDIT,
+    /** spare unused state to allow state chart extensions*/
+    XST1,
+    /** spare unused state to allow state chart extensions*/
+    XST2,
+    /** spare unused state to allow state chart extensions*/
+    XST3
 }
 
+/**
+ * <p>Defined events for the DetailView state chart.</p>
+ * <p>To allow extensions to the state chart, three "spare" events EV1, EV2, EV3
+ * are introduced. These events are not used by the default implementation.</p>
+ */
 enum DVEvent {
-    Init,     // initialise state machine
-    Select,   // an item of the displayed class was selected
-    Root,     // a new branch was selected, either by selecting another top level object or some subobject
-    Edit,     // start editing the selected object
-    Create,   // start creating a new object
-    Cancel,   // cancel edit or create
-    Save,     // save newly edited or created object
+    /** initialise state machine*/
+    Init,
+    /** an item of the displayed class was selected*/
+    Select,
+    /** new branch was selected by selecting another top level object or a subobject*/
+    Root,
+    /** start editing the selected object*/
+    Edit,
+    /** start creating a new object*/
+    Create,
+    /** cancel edit or create*/
+    Cancel,
+    /** save newly edited or created object*/
+    Save,
+    /** spare unused event to allow state chart extensions*/
+    XEV1,
+    /** spare unused event to allow state chart extensions*/
+    XEV2,
+    /** spare unused event to allow state chart extensions*/
+    XEV3
 }

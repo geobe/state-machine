@@ -22,5 +22,5 @@ for detail views. See more details in the GroovyDoc
 
 ### Documentation
 * [GroovyDoc](https://geobe.github.io/state-machine/docs/index.html)
-* [Tutorial](https://www.georgbeier.de/docs-and-howtos/ui-state-machine/)
+* [State Machine Tutorial](https://www.georgbeier.de/docs-and-howtos/ui-state-machine/)
 
