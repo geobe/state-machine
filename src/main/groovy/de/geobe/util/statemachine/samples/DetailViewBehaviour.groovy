@@ -98,11 +98,13 @@ abstract class DetailViewBehavior {
         // define transition [optionally with activities]
         sm.addTransition(DVState.SUBVIEW, DVState.INIT, DVEvent.Init)
         sm.addTransition(DVState.INIT, DVState.SHOW, DVEvent.Select)
+                {Object... params -> onItemSelected(params[0])}
         sm.addTransition(DVState.INIT, DVState.EMPTY, DVEvent.Root)
         sm.addTransition(DVState.TOPVIEW, DVState.EMPTY, DVEvent.Init)
         sm.addTransition(DVState.EMPTY, DVState.EMPTY, DVEvent.Root)
         sm.addTransition(DVState.EMPTY, DVState.CREATEEMPTY, DVEvent.Create)
         sm.addTransition(DVState.EMPTY, DVState.SHOW, DVEvent.Select)
+                {Object... params -> onItemSelected(params[0])}
         sm.addTransition(DVState.CREATEEMPTY, DVState.SHOW, DVEvent.Save) {
             onCreateSave()
         }
@@ -112,6 +114,7 @@ abstract class DetailViewBehavior {
         sm.addTransition(DVState.SHOW, DVState.EDIT, DVEvent.Edit)
         sm.addTransition(DVState.SHOW, DVState.CREATE, DVEvent.Create)
         sm.addTransition(DVState.SHOW, DVState.SHOW, DVEvent.Select)
+                {Object... params -> onItemSelected(params[0])}
         sm.addTransition(DVState.SHOW, DVState.EMPTY, DVEvent.Root)
         sm.addTransition(DVState.EDIT, DVState.SHOW, DVEvent.Save) {
             onEditSave(); onEditDone()
@@ -136,20 +139,30 @@ abstract class DetailViewBehavior {
      * This method is usually called by the selector component.
      * @param itemId unique identifying key
      */
-    abstract void initItem(Long itemId)
+    @Deprecated
+    protected void initItem(Long itemId) {}
 
     /** prepare for editing in CREATEEMPTY state */
     protected abstract void createemptymode()
     /** prepare for editing in CREATE state */
     protected abstract void createmode()
+
+    /**
+     * Any transition triggered by select event (i.e. a new item was selected in
+     * the selector component) has to load the new item from the service layer
+     * and load its attributes into the field components.
+     * Deprecates initItem method
+     * @param itemId unique identifying key
+     */
+    protected abstract void onItemSelected(Long itemId)
     /**
      * leaving CREATE or CREATEEMPTY state with save
      * saving created item to persistent storage,
      * typically by calling an appropriate service.
      */
-    protected void onCreateSave() {}
-    /** leaving DIALOG state with cancel */
-    protected void onCreateCancel() {}
+    protected abstract void onCreateSave()
+    /** leaving CREATE or CREATEEMPTY  state with cancel */
+    protected abstract void onCreateCancel()
     /** prepare for editing in EDIT state */
     protected abstract void editmode()
     /** prepare INIT state */
