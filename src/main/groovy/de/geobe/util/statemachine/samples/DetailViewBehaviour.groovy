@@ -120,7 +120,7 @@ abstract class DetailViewBehavior {
             onEditSave(); onEditDone()
         }
         sm.addTransition(DVState.EDIT, DVState.SHOW, DVEvent.Cancel) {
-            onEditCancel(); onEditDone()
+            onEditCancel(); onEditDone(false)
         }
         sm.addTransition(DVState.CREATE, DVState.SHOW, DVEvent.Save) {
             onCreateSave()
